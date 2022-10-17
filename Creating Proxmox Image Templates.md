@@ -31,7 +31,7 @@ wget https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.i
 
 - Create new virtual machine, specifying the image ID, name and available RAM and CPU cores
 ```bash
-qm create 100 --memory 2048 --core 2 --name ubuntu-20.04 --net0 virtio,bridge=vmbr0
+qm create 100 --memory 2048 --cores 2 --name ubuntu-20.04 --net0 virtio,bridge=vmbr0
 ```
 
 - Import downloaded image to local lvm storage (if not using lvm storage you can specify alternative e.g. local-zfs)
@@ -59,19 +59,37 @@ qm set 100 --boot c --bootdisk scsi0
 qm set 100 --serial0 socket --vga serial0
 ```
 
+- Turn on QEMU Agent (allows for IP address visibility and VM control features)
+```bash
+qm set 100 --agent enabled=1
+```
+
 ### Setup Image Template
 
-**DO NOT START YOUR VM**
-
-- Configure hardware and cloud init (done inside of Proxmox in web browser)
-- Turn on QEMU agent (allows for IP address visibility and VM control features)
-- I prefer to configure HDD size after template has been cloned, depending on use case
 - Create template
 ```bash
 qm template 100
 ```
 
-- Clone template - template ID (100), new image ID (201)
+- Clone template - template ID (100), new image ID (201), `--full` removes any connection of the new image to the template from which it was cloned
 ```bash
 qm clone 100 201 --name media --full
+```
+
+- Setup SSH Keys and IP address (note these setting are applied to the VM ID we created above 201)
+```bash
+qm set 201 --sshkey ~/.ssh/id_rsa.pub
+qm set 201 --ipconfig0 ip=192.168.1.10/24,gw=192.168.1.1
+```
+
+### Starting & Connecting to VM
+
+- Start VM
+```bash
+qm start 201
+```
+
+- Login via SSH (default user is ubuntu for Ubuntu Server)
+```bash
+ssh ubuntu@192.168.1.10
 ```
