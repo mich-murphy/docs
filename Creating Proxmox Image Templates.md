@@ -1,4 +1,8 @@
->Refer to [technotim blog](https://docs.technotim.live/posts/cloud-init-cloud-image/)
+### Relavant Links
+
+- [[Proxmox Force Stop VM]]
+- [Technotim Blog](https://docs.technotim.live/posts/cloud-init-cloud-image/)
+- [Austins Nerdy Things Blog](https://austinsnerdythings.com/2021/08/30/how-to-create-a-proxmox-ubuntu-cloud-init-image/)
 
 ### Find & Configure Image
 
@@ -7,17 +11,30 @@
 ssh user@ip
 ```
 
-- Find download url for cloud image distribution (pre-configured images meant for cloud deployment) and download
+- Find download url for cloud image distribution (pre-configured images meant for cloud deployment - use a KVM image for Proxmox) and download
 ```bash
 wget https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
 ```
 
+- **The following is only necessary for an Ubuntu image**
+	- The Ubuntu cloud image doesn't come with QEMU installed, we can add this to the image by first installing virt-customize
+	```bash
+	apt install libguestfs-tools -y
+	```
+	
+	- Install QEMU Agent
+	```bash
+	virt-customize -a focal-server-cloudimg-amd64.img --install qemu-guest-agent
+	```
+
+### Add Image to Proxmox
+
 - Create new virtual machine, specifying the image ID, name and available RAM and CPU cores
 ```bash
-qm create 100 --memory 6144 --core 6 --name ubuntu-20.04 --net0 virtio,bridge=vmbr0
+qm create 100 --memory 2048 --core 2 --name ubuntu-20.04 --net0 virtio,bridge=vmbr0
 ```
 
-- Import downloaded image to local lvm storage
+- Import downloaded image to local lvm storage (if not using lvm storage you can specify alternative e.g. local-zfs)
 ```bash
 qm importdisk 100 focal-server-cloudimg-amd64.img local-lvm
 ```
@@ -46,7 +63,9 @@ qm set 100 --serial0 socket --vga serial0
 
 **DO NOT START YOUR VM**
 
-- Configure hardware and cloud init (done inside of Proxmox in web browser). I prefer to configure HDD size after template has been cloned, depending on use case
+- Configure hardware and cloud init (done inside of Proxmox in web browser)
+- Turn on QEMU agent (allows for IP address visibility and VM control features)
+- I prefer to configure HDD size after template has been cloned, depending on use case
 - Create template
 ```bash
 qm template 100
