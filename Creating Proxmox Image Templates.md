@@ -6,9 +6,9 @@
 
 ### Find & Configure Image
 
-- SSH into Proxmox machine
+- SSH into Proxmox machine (root@proxmoxip)
 ```bash
-ssh user@ip
+ssh root@192.168.1.5
 ```
 
 - Find download url for cloud image distribution (pre-configured images meant for cloud deployment - use a KVM image for Proxmox) and download
@@ -25,6 +25,11 @@ wget https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.i
 	- Install QEMU Agent
 	```bash
 	virt-customize -a focal-server-cloudimg-amd64.img --install qemu-guest-agent
+	```
+
+	- Set password for root user
+	```bash
+	virt-customize -a bionic-server-cloudimg-amd64.img --root-password password:<pass>
 	```
 
 ### Add Image to Proxmox
@@ -66,6 +71,7 @@ qm set 100 --agent enabled=1
 
 ### Setup Image Template
 
+- Setup cloud-init user/login and SSH key via Proxmox web interface
 - Create template
 ```bash
 qm template 100
@@ -76,9 +82,8 @@ qm template 100
 qm clone 100 201 --name media --full
 ```
 
-- Setup SSH Keys and IP address (note these setting are applied to the VM ID we created above 201)
+- Setup IP address (note these setting are applied to the VM ID we created above 201)
 ```bash
-qm set 201 --sshkey ~/.ssh/id_rsa.pub
 qm set 201 --ipconfig0 ip=192.168.1.10/24,gw=192.168.1.1
 ```
 
@@ -92,4 +97,11 @@ qm start 201
 - Login via SSH (default user is ubuntu for Ubuntu Server)
 ```bash
 ssh ubuntu@192.168.1.10
+```
+
+### Shutdown & Remove Image
+
+- Shutdown and destroy VM
+```bash
+qm stop 201 && qm destroy 201
 ```

@@ -2,6 +2,10 @@
 
 - [[Creating Proxmox Image Templates]]
 
+### Common Reasons for Error
+
+- Frequent hanging is likely a result of the QEMU Agent not being installed
+
 ### Stopping a VM
 
 - Attempt to stop VM via terminal using VM ID
